@@ -1,38 +1,23 @@
-import uvicorn
+# app/main.py
 from fastapi import FastAPI
-import time
-from pydantic import BaseModel
+from app.api.v1 import auth, user
 
-app = FastAPI()
+app = FastAPI(
+    title="AI Chat Platform API",
+    description="AI 聊天平台后端接口",
+    version="1.0.0"
+)
 
-class LoginRequest(BaseModel):
-    username: str
-    password: str
+# 注册路由
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(user.router, prefix="/api/v1")
 
 
-@app.get("/user/{user_id}")
-async def get_user(user_id: str):
-    return {
-        "code": 200,
-        "data":{
-        "user_id": user_id,
-        "user_name": "John Doe",
-    },
-        "msg": "成功"
-    }
-
-@app.post("/login")
-async def login(request: LoginRequest):
-    # 当前时间戳
-    timestamp = int(time.time())
-    return {
-        "code": 200,
-        "data": {"user_id": timestamp,
-                 "username": request.username,
-                 "token": "123456}",},
-        "msg": "成功"
-     }
+@app.get("/")
+async def root():
+    return {"message": "Welcome to AI Chat Platform API"}
 
 
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
