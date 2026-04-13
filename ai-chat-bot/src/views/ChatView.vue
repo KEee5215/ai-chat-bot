@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SiderBar from "@/components/home/SiderBar.vue";
+import SiderBar from "@/components/chat/SiderBar.vue";
 import TheWelcome from "../components/TheWelcome.vue";
 </script>
 
