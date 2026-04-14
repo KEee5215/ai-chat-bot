@@ -11,3 +11,13 @@ async def get_user(user_id: str):
     """获取用户信息"""
     data = UserService.get_user(user_id)
     return success_response(data=data)
+
+
+@router.get("/")
+async def get_users(page: int = 1, pageSize: int = 10):
+    """ 分页查询,使用查询参数传参"""
+    data = {
+        "page": page,
+        "pageSize": pageSize
+    }
+    return success_response(data=data)
