@@ -5,5 +5,5 @@ export const getUser = (id: string) => {
 };
 
 export function userLogin(username: string, password: string) {
-  return service.post("/login", { username, password });
+  return service.post("/auth/login", { username, password });
 }

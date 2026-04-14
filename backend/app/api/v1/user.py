@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.services.user_service import UserService
 from app.utils.response import success_response
 
-router = APIRouter(prefix="/users", tags=["用户"])
+router = APIRouter(prefix="/user", tags=["用户"])
 
 
 @router.get("/{user_id}")
