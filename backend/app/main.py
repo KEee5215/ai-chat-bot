@@ -1,14 +1,23 @@
 # app/main.py
-from fastapi import FastAPI ,Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from contextlib import asynccontextmanager
 
-from app.dependencies import get_session
-from app.utils import response
-from models import AsyncSessionMaker
+from fastapi import FastAPI ,Depends
+
+from models import AsyncSessionMaker,engine
 
 from app.api.v1 import auth, user ,item
-import models
-from models.user import User
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    # 启动时执行
+    print("应用启动成功")
+    yield
+    # 关闭时执行
+    print("正在关闭数据库连接池...")
+    await engine.dispose()
+    print("数据库连接池已关闭")
 
 app = FastAPI(
     title="AI Chat Platform API",
@@ -26,13 +35,8 @@ app.include_router(item.router, prefix="/api/v1")
 async def root():
     return {"message": "Welcome to AI Chat Platform API"}
 
-@app.post("/user/add")
-async def add_user(session: AsyncSession = Depends(get_session)):
-    # 开启事物
-    async with session.begin() as transaction:
-        new_user = User(username="admin123456", password="12345678910",email="admin123456@qq.com")
-        session.add(new_user)
-    return response.success_response(data=new_user)
+
+
 
 
 if __name__ == "__main__":
