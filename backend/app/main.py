@@ -1,6 +1,7 @@
 # app/main.py
 from fastapi import FastAPI
 from app.api.v1 import auth, user ,item
+import models
 
 app = FastAPI(
     title="AI Chat Platform API",
