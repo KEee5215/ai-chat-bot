@@ -2,7 +2,9 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI ,Depends
+from fastapi_mail import FastMail, MessageSchema, MessageType
 
+from app.dependencies import get_mail
 from models import AsyncSessionMaker,engine
 
 from app.api.v1 import auth, user ,item
@@ -35,6 +37,19 @@ app.include_router(item.router, prefix="/api/v1")
 async def root():
     return {"message": "Welcome to AI Chat Platform API"}
 
+@app.get("/mail/test")
+async def mail_test(
+        email: str ,
+        mail: FastMail = Depends(get_mail),
+):
+    message = MessageSchema(
+        subject="测试邮件",
+        recipients=[email],
+        body=f"hello!{email}",
+        subtype=MessageType.plain
+    )
+    await mail.send_message(message)
+    return {"message": "发送成功"}
 
 
 
