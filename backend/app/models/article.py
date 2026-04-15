@@ -4,6 +4,7 @@ from sqlalchemy import Integer, String, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import Base
+from .user import User
 
 
 
