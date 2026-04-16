@@ -26,7 +26,11 @@
 
 <script setup lang="ts">
 import { userLogin } from "@/api/user/user";
+
 import { ref } from "vue";
+
+import { useRouter } from "vue-router";
+const router = useRouter();
 
 const username = ref("");
 const password = ref("");
@@ -45,19 +49,21 @@ async function login() {
     });
 
     const response: any = await userLogin(username.value, password.value);
-    console.log("登录成功，响应数据:", response);
+    console.log("登录响应:", response);
+    console.log("登录成功，token:", response.access_token);
 
     // 保存 token 和用户信息（根据实际后端返回的数据结构调整）
-    if (response.token) {
-      localStorage.setItem("token", response.token);
+    if (response.access_token) {
+      console.log("Token:", response.access_token);
+      localStorage.setItem("token", response.access_token);
       localStorage.setItem("username", response.username || username.value);
       localStorage.setItem("user_id", response.user_id);
 
-      console.log("Token 已保存:", response.token);
+      console.log("Token 已保存:", response.access_token);
 
       // 跳转到主页
-      // router.push("/");
-      alert("登录成功！");
+      router.push("/chat");
+      // alert("登录成功！");
     } else {
       alert("登录成功，但未获取到 Token");
     }
