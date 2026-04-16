@@ -3,7 +3,7 @@
     <input id="my-drawer-4" type="checkbox" class="drawer-toggle" />
     <div class="drawer-content">
       <!-- Navbar -->
-      <nav class="navbar w-full bg-base-300">
+      <nav class="navbar w-full bg-base-300 fixed z-10">
         <label
           for="my-drawer-4"
           aria-label="open sidebar"
@@ -32,6 +32,9 @@
       <!-- Page content here -->
       <div class="p-4">
         <RouterView></RouterView>
+        <div class="fixed bottom-0 left-14 right-0 z-50 bg-base-100">
+          <ChatInput></ChatInput>
+        </div>
       </div>
     </div>
 
@@ -129,6 +132,8 @@ import BotIcon from "../icons/BotIcon.vue";
 import LogoIcon from "../icons/LogoIcon.vue";
 import PlusIcon from "../icons/PlusIcon.vue";
 import SettingsIcon from "../icons/SettingsIcon.vue";
+import ChatInput from "./ChatInput.vue";
+import SendIcon from "../icons/SendIcon.vue";
 
 // 模拟用户数据（实际项目中应该从 store 或 API 获取）
 const username = computed(() => {
