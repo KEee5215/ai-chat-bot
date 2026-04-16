@@ -10,15 +10,32 @@ from app.dependencies import get_mail, get_session
 from app.schemas.auth import LoginRequest, RegisterRequest
 from app.services.auth_service import AuthService
 from app.utils.response import success_response
+from app.core.auth import create_access_token
 
 router = APIRouter(prefix="/auth", tags=["认证"])
 
 
 @router.post("/login")
-async def login(data: LoginRequest):
+async def login(data: LoginRequest, session: AsyncSession = Depends(get_session)):
     """用户登录"""
-    response = AuthService.login(data.username, data.password)
-    return success_response(data=response, msg="登录成功")
+    # 验证用户名密码并获取用户信息
+    user = await AuthService.login(data.username, data.password, session)
+    
+    # 生成 JWT Token
+    access_token = create_access_token(
+        data={"sub": str(user.id), "username": user.username}
+    )
+    
+    return success_response(
+        data={
+            "user_id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "access_token": access_token,
+            "token_type": "bearer"
+        },
+        msg="登录成功"
+    )
 
 
 @router.get("/code")

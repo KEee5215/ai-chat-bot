@@ -15,4 +15,9 @@ MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "AI 聊天平台")
 MAIL_STARTTLS = os.getenv("MAIL_STARTTLS", "True").lower() == "true"
 MAIL_SSL_TLS = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
 
+# JWT 配置
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
 

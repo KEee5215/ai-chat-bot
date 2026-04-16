@@ -2,6 +2,7 @@
 import time
 
 from app.exceptions import BusinessException
+from app.models.user import verify_password
 from app.repository.user_repo import EmailCodeRepository, UserRepository
 
 
@@ -9,17 +10,39 @@ class AuthService:
     """认证服务"""
 
     @staticmethod
-    def login(username: str, password: str) -> dict:
+    async def login(username: str, password: str, session) -> dict:
         """
-        登录业务逻辑
-        TODO: 这里应该验证用户名密码，查询数据库等
+        登录业务逻辑 - 验证用户名密码
+        
+        Args:
+            username: 用户名
+            password: 密码
+            session: 数据库会话
+        
+        Returns:
+            用户对象
+        
+        Raises:
+            BusinessException: 用户名或密码错误
         """
-        timestamp = int(time.time())
-        return {
-            "user_id": timestamp,
-            "username": username,
-            "token": "123456"  # TODO: 生成真实的 JWT token
-        }
+        # user_repo = UserRepository(session)
+        
+        # 通过用户名查询用户(也可以改为邮箱登录)
+        from sqlalchemy import select
+        from app.models.user import User
+        
+        stmt = select(User).where(User.username == username)
+        result = await session.execute(stmt)
+        user = result.scalars().first()
+        
+        if not user:
+            raise BusinessException(code=401, message="用户名或密码错误")
+        
+        # 验证密码
+        if not verify_password(password, user.password):
+            raise BusinessException(code=401, message="用户名或密码错误")
+        
+        return user
 
         ## 将邮箱和验证码存入数据库
     @staticmethod
