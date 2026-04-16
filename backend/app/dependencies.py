@@ -5,6 +5,10 @@ async def get_session():
     session = AsyncSessionMaker()
     try:
         yield session
+        await session.commit()  # 请求成功时提交事务
+    except Exception:
+        await session.rollback()  # 发生异常时回滚
+        raise
     finally:
         await session.close()
 

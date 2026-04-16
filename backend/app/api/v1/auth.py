@@ -7,7 +7,7 @@ from fastapi_mail import FastMail, MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_mail, get_session
-from app.schemas.auth import LoginRequest
+from app.schemas.auth import LoginRequest, RegisterRequest
 from app.services.auth_service import AuthService
 from app.utils.response import success_response
 
@@ -42,3 +42,11 @@ async def get_email_code(email: str,
     response =await AuthService.create_email_code(email,code,session)
     #成功业务层会返回ok
     return success_response(data=response, msg="获取成功")
+
+
+# 注册
+@router.post("/register")
+async def register(data: RegisterRequest, session: AsyncSession = Depends(get_session)):
+    """用户注册"""
+    response = await AuthService.register(data.username, data.password, data.email, data.code, session)
+    return success_response(data=response, msg="注册成功")

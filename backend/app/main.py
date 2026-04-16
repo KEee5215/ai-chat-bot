@@ -1,13 +1,19 @@
 # app/main.py
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI ,Depends
+from fastapi import FastAPI ,Depends,Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi_mail import FastMail, MessageSchema, MessageType
 
 from app.dependencies import get_mail
+from app.exceptions import BusinessException
+from app.utils.response import error_response
 from models import AsyncSessionMaker,engine
 
 from app.api.v1 import auth, user ,item
+
+
 
 
 @asynccontextmanager
@@ -31,6 +37,25 @@ app = FastAPI(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(user.router, prefix="/api/v1")
 app.include_router(item.router, prefix="/api/v1")
+
+
+
+@app.exception_handler(BusinessException)
+async def business_exception_handler(request: Request, exc: BusinessException):
+    """业务异常处理"""
+    return JSONResponse(
+        status_code=exc.code,
+        content=error_response(code=exc.code, msg=exc.message)
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """请求验证异常处理"""
+    return JSONResponse(
+        status_code=422,
+        content=error_response(code=422, msg=str(exc.errors()))
+    )
 
 
 @app.get("/")
