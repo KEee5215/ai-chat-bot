@@ -28,9 +28,7 @@ async def login(data: LoginRequest, session: AsyncSession = Depends(get_session)
     
     return success_response(
         data={
-            "user_id": user.id,
             "username": user.username,
-            "email": user.email,
             "access_token": access_token,
             "token_type": "bearer"
         },

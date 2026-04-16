@@ -63,3 +63,10 @@ class UserRepository:
         self.session.add(user)
         await self.session.flush()
         return user
+
+    async def get_by_id(self, user_id: int) -> User | None:
+        """根据ID查询用户信息"""
+        stmt = select(User).where(User.id == user_id)
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+

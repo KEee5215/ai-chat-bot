@@ -1,9 +1,12 @@
 # app/main.py
 from contextlib import asynccontextmanager
+from typing import Annotated
 
 from fastapi import FastAPI ,Depends,Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
+
 from fastapi_mail import FastMail, MessageSchema, MessageType
 
 from app.dependencies import get_mail
@@ -31,11 +34,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # 注册路由
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(user.router, prefix="/api/v1")
 app.include_router(item.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
+
+
 
 
 
@@ -60,6 +66,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.get("/")
 async def root():
     return {"message": "Welcome to AI Chat Platform API"}
+
+
 
 @app.get("/mail/test")
 async def mail_test(

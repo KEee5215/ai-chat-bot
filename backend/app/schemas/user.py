@@ -7,3 +7,10 @@ class UserResponse(BaseModel):
     username: str
     password: str
     email: str
+
+class User(BaseModel):
+    """用户信息"""
+    id: int
+    username: str
+    email: str
+    

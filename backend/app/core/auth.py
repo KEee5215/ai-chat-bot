@@ -2,8 +2,13 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 import jwt
 from jwt.exceptions import InvalidTokenError
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.settings import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+
+# HTTP Bearer Token 安全方案
+security = HTTPBearer()
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -52,21 +57,63 @@ def verify_token(token: str) -> dict:
         raise InvalidTokenError(f"Token 验证失败: {str(e)}")
 
 
-def get_current_user_id(token: str) -> int:
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> dict:
     """
-    从 Token 中获取当前用户 ID
+    FastAPI 依赖注入:获取当前登录用户信息
+    
+    使用方式:
+        @router.get("/protected")
+        async def protected_route(current_user: dict = Depends(get_current_user)):
+            user_id = current_user["user_id"]
+            ...
     
     Args:
-        token: JWT token 字符串
+        credentials: HTTP Bearer 认证信息
     
     Returns:
-        用户 ID
+        包含用户信息的字典 {"user_id": int, "username": str}
     
     Raises:
-        InvalidTokenError: Token 无效或已过期
+        HTTPException: 未认证或 Token 无效
     """
-    payload = verify_token(token)
-    user_id: int = payload.get("sub")
-    if user_id is None:
-        raise InvalidTokenError("Token 中缺少用户ID")
-    return user_id
+    token = credentials.credentials
+    
+    try:
+        payload = verify_token(token)
+        user_id = payload.get("sub")
+        username = payload.get("username")
+        
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="无效的认证令牌",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        return {
+            "user_id": int(user_id),
+            "username": username
+        }
+    
+    except InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="认证令牌已过期或无效",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+async def get_current_user_id(
+    current_user: dict = Depends(get_current_user)
+) -> int:
+    """
+    FastAPI 依赖注入:仅获取当前用户 ID
+    
+    使用方式:
+        @router.get("/protected")
+        async def protected_route(user_id: int = Depends(get_current_user_id)):
+            ...
+    """
+    return current_user["user_id"]
