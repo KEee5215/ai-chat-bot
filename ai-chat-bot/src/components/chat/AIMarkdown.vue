@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import markdownit from "markdown-it";
 import hljs from "highlight.js";
+import "highlight.js/styles/atom-one-dark.css";
 import DOMPurify from "dompurify";
 
 // 自定义代码块渲染
@@ -9,7 +10,7 @@ const md = markdownit({
   highlight: (str: any, lang: any) => {
     if (lang && hljs.getLanguage(lang)) {
       try {
-        return `<pre class="hljs"><code>${
+        return `<pre class="hljs"><code class="language-${lang}">${
           hljs.highlight(str, { language: lang }).value
         }</code></pre>`;
       } catch {}
@@ -28,8 +29,9 @@ const props = defineProps<{
 const html = computed(() => {
   const rendered = md.render(props.content);
   return DOMPurify.sanitize(rendered, {
-    ADD_TAGS: ["iframe"],
-    ADD_ATTR: ["src", "allow", "allowfullscreen"],
+    ADD_TAGS: ["iframe", "span"],
+    ADD_ATTR: ["src", "allow", "allowfullscreen", "class"],
+    ALLOWED_ATTR: ["class", "src", "allow", "allowfullscreen"],
   });
 });
 </script>
@@ -102,16 +104,25 @@ const html = computed(() => {
 }
 
 .ai-markdown pre {
-  background: #1e1e1e !important;
+  background: #282c34 !important;
   padding: 16px !important;
   border-radius: 8px !important;
   overflow-x: auto !important;
   margin-bottom: 1rem !important;
+  border: 1px solid #3e4451 !important;
 }
 
 .ai-markdown code {
   font-family: "JetBrains Mono", monospace !important;
   font-size: 14px !important;
+  color: #abb2bf !important;
+  line-height: 1.5 !important;
+}
+
+.ai-markdown pre code {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
 }
 
 .ai-markdown table {
@@ -140,5 +151,48 @@ const html = computed(() => {
 
 .ai-markdown a:hover {
   color: #1e40af !important;
+}
+
+/* 行内代码样式 */
+.ai-markdown p code {
+  background: #f5f5f5 !important;
+  color: #d73a49 !important;
+  padding: 2px 6px !important;
+  border-radius: 3px !important;
+  font-size: 0.9em !important;
+}
+
+/* 确保 highlight.js 的样式生效 */
+.hljs {
+  background-color: #282c34 !important;
+  color: #abb2bf !important;
+}
+
+.hljs-string {
+  color: #98c379 !important;
+}
+
+.hljs-number {
+  color: #d19a66 !important;
+}
+
+.hljs-literal {
+  color: #56b6c2 !important;
+}
+
+.hljs-attr {
+  color: #e06c75 !important;
+}
+
+.hljs-title {
+  color: #61afef !important;
+}
+
+.hljs-function {
+  color: #61afef !important;
+}
+
+.hljs-keyword {
+  color: #c678dd !important;
 }
 </style>

@@ -11,9 +11,7 @@ from app.exceptions import BusinessException
 from app.utils.response import error_response
 from models import AsyncSessionMaker,engine
 
-from app.api.v1 import auth, user ,item
-
-
+from app.api.v1 import auth, user, item, chat
 
 
 @asynccontextmanager
@@ -37,6 +35,7 @@ app = FastAPI(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(user.router, prefix="/api/v1")
 app.include_router(item.router, prefix="/api/v1")
+app.include_router(chat.router, prefix="/api/v1")
 
 
 

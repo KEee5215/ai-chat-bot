@@ -40,6 +40,13 @@ export const useMessageStore = defineStore("message", () => {
     message.value.push({ role: "assistant", content });
   }
 
+  // 更新AI消息内容
+  function updateAIMessageContent(index: number, content: string) {
+    if (message.value[index]) {
+      message.value[index].content = content;
+    }
+  }
+
   function removeAIMessage(index: number) {
     message.value.splice(index, 1);
   }
@@ -50,5 +57,6 @@ export const useMessageStore = defineStore("message", () => {
     removeUserMessage,
     addAIMessage,
     removeAIMessage,
+    updateAIMessageContent,
   };
 });

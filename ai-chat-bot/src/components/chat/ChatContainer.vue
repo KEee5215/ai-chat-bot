@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-full w-full">
-    <div class="flex-1 overflow-y-auto p-24">
+    <div class="flex-1 overflow-y-auto pb-24">
       <MessageItem
         v-for="item in message"
         :content="item.content"
