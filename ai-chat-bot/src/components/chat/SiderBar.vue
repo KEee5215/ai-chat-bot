@@ -32,9 +32,6 @@
       <!-- Page content here -->
       <div class="p-4">
         <RouterView></RouterView>
-        <div class="fixed bottom-0 left-14 right-0 z-50 bg-base-100">
-          <ChatInput></ChatInput>
-        </div>
       </div>
     </div>
 

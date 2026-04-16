@@ -1,6 +1,11 @@
 <template>
-  <div :class="chatClass">
+  <div v-if="props.role === 'user'" :class="chatClass">
     <div :class="chatBubbleClass">
+      <AIMarkdown :content="content" />
+    </div>
+  </div>
+  <div v-else class="m-6 px-4 py-6">
+    <div class="max-w-4xl mx-auto">
       <AIMarkdown :content="content" />
     </div>
   </div>
@@ -18,7 +23,9 @@ const chatClass = computed(() => {
 });
 
 const chatBubbleClass = computed(() => {
-  return props.role === "user" ? "chat-bubble-info chat-bubble" : "chat-bubble";
+  return props.role === "user"
+    ? "chat-bubble-success chat-bubble"
+    : "chat-bubble";
 });
 </script>
 
