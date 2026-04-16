@@ -1,11 +1,14 @@
 <template>
   <div :class="chatClass">
-    <div :class="chatBubbleClass">{{ content }}</div>
+    <div :class="chatBubbleClass">
+      <AIMarkdown :content="content" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
+import AIMarkdown from "../chat/AIMarkdown.vue";
 
 const props = defineProps(["role", "content"]);
 

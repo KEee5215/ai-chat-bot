@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-full w-full">
-    <div class="flex-1 overflow-y-auto pb-24">
+    <div class="flex-1 overflow-y-auto p-24">
       <MessageItem
         v-for="item in message"
         :content="item.content"
@@ -14,34 +14,12 @@
 import { useRoute } from "vue-router";
 import { ref } from "vue";
 import MessageItem from "../message/MessageItem.vue";
-import ChatInput from "./ChatInput.vue";
-import SendIcon from "../icons/SendIcon.vue";
 
-const message = ref([
-  { role: "user", content: "hello" },
-  { role: "assistant", content: "hello" },
-  { role: "user", content: "hello" },
-  { role: "assistant", content: "hello" },
-  { role: "user", content: "hello" },
-  { role: "assistant", content: "hello" },
-  { role: "user", content: "hello" },
-  {
-    role: "assistant",
-    content: "hello,aisdiohasdoaisdhasidh<br>nsdnaiosdioasdadaiosdn",
-  },
-  { role: "user", content: "hello" },
-  { role: "assistant", content: "hello" },
-  { role: "user", content: "hello" },
-  { role: "assistant", content: "hello" },
-  { role: "user", content: "hello" },
-  { role: "assistant", content: "hello" },
-  { role: "user", content: "hello" },
-  { role: "assistant", content: "hello" },
-  { role: "user", content: "hello" },
-  { role: "assistant", content: "hello" },
-  { role: "user", content: "hello" },
-  { role: "assistant", content: "hello" },
-]);
+import { useMessageStore } from "@/stores/message";
+
+const messageStore = useMessageStore();
+
+const message = ref(messageStore.message);
 
 const route = useRoute();
 //通过这个id来查询对话历史
