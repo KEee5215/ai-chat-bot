@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import Integer, Column, String, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import  List
+from typing import List
 from pwdlib import PasswordHash
 
 #密码加密第三方库
@@ -34,6 +34,7 @@ class User(Base):
     _password: Mapped[str] = mapped_column(String(200) )
     user_extension: Mapped["UserExtension"] = relationship(back_populates="User",uselist= False)
     articles: Mapped[List["Article"]] = relationship(back_populates="author")
+    chat_sessions: Mapped[List["ChatSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
     def __init__(self,*args,**kwargs):#位置参数,关键字参数

@@ -44,3 +44,4 @@ class Base(DeclarativeBase):
 # 在文件底部导入所有模型，确保 Base 已完全定义
 from . import user
 from . import article
+from . import chat

@@ -1,7 +1,13 @@
 import asyncio
 import json
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.dependencies import get_session
+from app.core.llm import chat_stream, build_messages
+from app.core.auth import get_current_user_id
+from fastapi import Header, HTTPException
 
 router = APIRouter(prefix="/chat", tags=["聊天"])
 
@@ -72,19 +78,59 @@ async def simulate_stream(content: str, delay: float = 0.05):
 
 
 @router.post("/stream")
-async def stream_chat():
+async def stream_chat(
+    request_body: dict,
+    authorization: str = Header(None)
+):
     """
-    流式聊天接口 - 模拟 AI 回复
+    流式聊天接口 - 调用 OpenAI API
     
-    返回 Server-Sent Events (SSE) 格式的流式数据
+    Request Body:
+    {
+        "message": "用户消息",
+        "system_prompt": "可选的系统提示",
+        "history": []  // 可选的历史对话
+    }
     """
+    # TODO: 验证 JWT Token
+    # if not authorization:
+    #     raise HTTPException(status_code=401, detail="未提供认证令牌")
+    
+    user_message = request_body.get("message", "")
+    system_prompt = request_body.get("system_prompt", "你是一个有用的AI助手")
+    history = request_body.get("history", [])
+    
+    if not user_message:
+        raise HTTPException(status_code=400, detail="消息不能为空")
+    
+    # 构建消息列表
+    messages = build_messages(
+        system_prompt=system_prompt,
+        user_message=user_message,
+        history=history
+    )
+    
+    async def generate():
+        """生成流式响应"""
+        try:
+            async for chunk in chat_stream(messages):
+                # SSE 格式
+                yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+                await asyncio.sleep(0)  # 让出控制权
+        except Exception as e:
+            error_msg = str(e)
+            yield f"data: {json.dumps({'error': error_msg}, ensure_ascii=False)}\n\n"
+        finally:
+            # 发送结束标记
+            yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
+    
     return StreamingResponse(
-        simulate_stream(MARKDOWN_CONTENT, delay=0.03),
+        generate(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"  # 禁用 Nginx 缓冲
+            "X-Accel-Buffering": "no"
         }
     )
 
