@@ -43,7 +43,13 @@ async function sendMessage() {
   if (!newMessage.value.trim()) return;
 
   const userInput = newMessage.value;
+  console.log("准备发送消息:", userInput);
+  console.log("发送前 messageStore.message 长度:", messageStore.message.length);
+  
   messageStore.addUserMessage(userInput);
+  console.log("添加用户消息后 messageStore.message 长度:", messageStore.message.length);
+  console.log("当前消息列表:", messageStore.message);
+  
   newMessage.value = "";
   isLoading.value = true;
 

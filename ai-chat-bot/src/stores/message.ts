@@ -22,42 +22,47 @@ export const useMessageStore = defineStore("message", () => {
   const message = shallowRef<Message[]>([]);
 
   function addUserMessage(content: string) {
-    const msgs = message.value;
-    msgs.push({ role: "user", content });
+    const msgs = [...message.value, { role: "user", content }];
+    message.value = msgs;
     triggerRef(message);
+    console.log("添加用户消息后，message.value:", message.value);
   }
 
   function removeUserMessage(index: number) {
-    message.value.splice(index, 1);
+    const msgs = message.value.filter((_, i) => i !== index);
+    message.value = msgs;
     triggerRef(message);
   }
 
   function addAIMessage(content: string) {
-    const msgs = message.value;
-    msgs.push({ role: "assistant", content, isStreaming: true });
+    const msgs = [...message.value, { role: "assistant", content, isStreaming: true }];
+    message.value = msgs;
     triggerRef(message);
+    console.log("添加AI消息后，message.value:", message.value);
   }
 
   // 更新AI消息内容 - 原地修改，不触发响应式
   function updateAIMessageContent(index: number, content: string) {
-    const msgs = message.value;
+    const msgs = [...message.value];
     if (msgs[index]) {
-      msgs[index].content = content;
-      // 手动触发更新
+      msgs[index] = { ...msgs[index], content };
+      message.value = msgs;
       triggerRef(message);
     }
   }
 
   function removeAIMessage(index: number) {
-    message.value.splice(index, 1);
+    const msgs = message.value.filter((_, i) => i !== index);
+    message.value = msgs;
     triggerRef(message);
   }
 
   // 标记消息流式完成
   function markMessageComplete(index: number) {
-    const msgs = message.value;
+    const msgs = [...message.value];
     if (msgs[index]) {
-      msgs[index].isStreaming = false;
+      msgs[index] = { ...msgs[index], isStreaming: false };
+      message.value = msgs;
       triggerRef(message);
     }
   }

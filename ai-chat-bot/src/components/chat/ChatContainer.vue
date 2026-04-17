@@ -42,11 +42,17 @@ const messageListRef = ref<HTMLDivElement>();
 // 监听消息变化，自动滚动
 watch(
   () => messageStore.message,
-  async () => {
-    await nextTick();
-    if (messageListRef.value) {
-      messageListRef.value.scrollTop = messageListRef.value.scrollHeight;
-    }
+  (newVal, oldVal) => {
+    console.log("消息列表变化:", { 
+      旧长度: oldVal?.length, 
+      新长度: newVal.length,
+      最新消息: newVal[newVal.length - 1]
+    });
+    nextTick(() => {
+      if (messageListRef.value) {
+        messageListRef.value.scrollTop = messageListRef.value.scrollHeight;
+      }
+    });
   },
   { deep: true },
 );
