@@ -51,10 +51,43 @@ watch(
   { deep: true },
 );
 
+// 监听路由参数变化，重新加载消息
+watch(
+  () => route.params.id,
+  async (newSessionId) => {
+    if (!newSessionId) return;
+    
+    const sessionId = newSessionId as string;
+    messageStore.setSessionId(sessionId);
+    console.log("路由变化，当前会话ID:", sessionId);
+    
+    try {
+      let res: any = await getMessage(sessionId, 50);
+      console.log("API返回的完整数据:", res);
+      
+      // 将获取到的消息设置到 store 中
+      if (Array.isArray(res)) {
+        console.log("使用 res 作为消息列表");
+        messageStore.setMessages(res);
+      } else if (res && res.data && Array.isArray(res.data)) {
+        console.log("使用 res.data 作为消息列表");
+        messageStore.setMessages(res.data);
+      } else {
+        console.warn("无法识别的消息数据结构:", res);
+      }
+      
+      console.log("设置后的 messageStore.message:", messageStore.message);
+    } catch (error) {
+      console.error("获取消息失败:", error);
+    }
+  },
+  { immediate: false }
+);
+
 onMounted(async () => {
   const sessionId = route.params.id as string;
   messageStore.setSessionId(sessionId);
-  console.log("当前会话ID:", sessionId);
+  console.log("组件挂载，当前会话ID:", sessionId);
   
   try {
     let res: any = await getMessage(sessionId, 50);

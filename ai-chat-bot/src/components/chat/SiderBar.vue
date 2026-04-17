@@ -208,7 +208,7 @@ const sessionList = ref<Session[]>([]);
 const selectSession = (session: Session) => {
   sessionId.value = session.id;
   messageStore.setSessionId(session.id);
-  // 可选：跳转到对应会话页面
+  // 跳转到对应会话页面，路由变化会触发 ChatContainer 的 watch 重新加载消息
   router.push(`/chat/${session.id}`);
 };
 
