@@ -2,7 +2,7 @@
 import random
 import string
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from fastapi_mail import FastMail, MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +11,8 @@ from app.schemas.auth import LoginRequest, RegisterRequest
 from app.services.auth_service import AuthService
 from app.utils.response import success_response
 from app.core.auth import create_access_token
+from app.core.token_blacklist import token_blacklist
+from app.settings import ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/auth", tags=["认证"])
 
@@ -57,6 +59,27 @@ async def get_email_code(email: str,
     response =await AuthService.create_email_code(email,code,session)
     #成功业务层会返回ok
     return success_response(data=response, msg="获取成功")
+
+
+@router.post("/logout")
+async def logout(authorization: str = Header(None)):
+    """
+    用户登出
+    
+    将 Token 加入黑名单,使其立即失效。
+    
+    前端应该:
+    1. 调用此接口(可选,用于服务端记录)
+    2. 删除本地存储的 Token (localStorage/sessionStorage)
+    3. 清除认证相关的状态
+    4. 跳转到登录页
+    """
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ", 1)[1]
+        # 将 Token 加入黑名单
+        token_blacklist.add_token(token, expire_minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    return success_response(msg="登出成功")
 
 
 # 注册

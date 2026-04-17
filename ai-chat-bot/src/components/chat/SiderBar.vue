@@ -59,6 +59,7 @@
             <button
               class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
               data-tip="新增会话"
+              @click="addSession"
             >
               <!-- Home icon -->
               <PlusIcon></PlusIcon>
@@ -109,17 +110,30 @@
             </div>
 
             <!-- 设置按钮 -->
-            <button
+            <label
+              for="settingsBtn"
               class="is-drawer-close:tooltip is-drawer-close:tooltip-right btn btn-ghost btn-circle btn-sm"
               data-tip="设置"
               @click="handleSettings"
             >
               <SettingsIcon></SettingsIcon>
-            </button>
+            </label>
           </div>
         </div>
       </div>
     </div>
+  </div>
+
+  <input type="checkbox" id="settingsBtn" class="modal-toggle" />
+  <div class="modal" role="dialog">
+    <div class="modal-box">
+      <h3 class="text-lg font-bold">设置</h3>
+      <p>退出登录</p>
+      <button class="btn btn-circle btn-sm btn-success" @click="logout">
+        <LogoutIcon></LogoutIcon>
+      </button>
+    </div>
+    <label class="modal-backdrop" for="settingsBtn">Close</label>
   </div>
 </template>
 
@@ -129,26 +143,35 @@ import BotIcon from "../icons/BotIcon.vue";
 import LogoIcon from "../icons/LogoIcon.vue";
 import PlusIcon from "../icons/PlusIcon.vue";
 import SettingsIcon from "../icons/SettingsIcon.vue";
-import ChatInput from "./ChatInput.vue";
-import SendIcon from "../icons/SendIcon.vue";
+import { useRouter } from "vue-router";
+const router = useRouter();
+import { useUserStore } from "@/stores/user";
 
-// 模拟用户数据（实际项目中应该从 store 或 API 获取）
-const username = computed(() => {
-  // 这里可以从 localStorage 或其他状态管理中获取用户名
-  return localStorage.getItem("username") || "用户";
-});
+import LogoutIcon from "../icons/LogoutIcon.vue";
 
-// 获取用户名的首字母作为头像
-const userInitial = computed(() => {
-  const name = username.value;
-  return name ? name.charAt(0).toUpperCase() : "U";
-});
+const userStore = useUserStore();
+
+const username = computed(() => userStore.username);
 
 // 处理设置按钮点击
 const handleSettings = () => {
   console.log("打开设置");
   // 这里可以跳转到设置页面或打开设置弹窗
   // router.push('/settings');
+};
+
+const addSession = async () => {
+  console.log("添加会话");
+  // 这里可以跳转到添加会话页面或打开添加会话弹窗
+  // router.push('/add-session');
+};
+
+const logout = async () => {
+  console.log("退出登录");
+  // 这里可以跳转到登录页面或打开登录弹窗
+  router.push("/login");
+  userStore.logout();
+  window.location.reload();
 };
 </script>
 

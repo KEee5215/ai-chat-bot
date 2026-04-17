@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.settings import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.core.token_blacklist import token_blacklist
 
 # HTTP Bearer Token 安全方案
 security = HTTPBearer()
@@ -79,6 +80,14 @@ async def get_current_user(
         HTTPException: 未认证或 Token 无效
     """
     token = credentials.credentials
+    
+    # 检查 Token 是否在黑名单中(已登出)
+    if token_blacklist.is_blacklisted(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token 已失效,请重新登录",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     try:
         payload = verify_token(token)
