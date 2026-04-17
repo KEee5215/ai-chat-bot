@@ -2,6 +2,14 @@ import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 
 export const useMessageStore = defineStore("message", () => {
+  //   用户选择的会话ID
+  const sessionId = ref<string>("");
+
+  //   修改sessionId的函数
+  function setSessionId(id: string) {
+    sessionId.value = id;
+  }
+
   interface Message {
     role: string;
     content: string;
@@ -58,5 +66,7 @@ export const useMessageStore = defineStore("message", () => {
     addAIMessage,
     removeAIMessage,
     updateAIMessageContent,
+    sessionId,
+    setSessionId,
   };
 });

@@ -56,38 +56,27 @@
         <ul class="menu w-full grow">
           <!-- List item -->
           <li>
-            <button
+            <label
+              for="addSession"
               class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
               data-tip="新增会话"
-              @click="addSession"
+              @click="showAddSessionModal"
             >
               <!-- Home icon -->
               <PlusIcon></PlusIcon>
               <span class="is-drawer-close:hidden">新建会话</span>
-            </button>
+            </label>
           </li>
 
           <!-- List item -->
-          <li>
+          <li v-for="session in sessionList">
             <button
               class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
               data-tip="某个会话"
             >
               <!-- Settings icon -->
               <BotIcon></BotIcon>
-              <span class="is-drawer-close:hidden">对话一</span>
-            </button>
-          </li>
-
-          <!-- List item -->
-          <li>
-            <button
-              class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-              data-tip="某个会话"
-            >
-              <!-- Settings icon -->
-              <BotIcon></BotIcon>
-              <span class="is-drawer-close:hidden">对话一</span>
+              <span class="is-drawer-close:hidden">{{ session.title }}</span>
             </button>
           </li>
         </ul>
@@ -109,36 +98,76 @@
               </div>
             </div>
 
-            <!-- 设置按钮 -->
+            <!-- 退出登录按钮 -->
             <label
-              for="settingsBtn"
-              class="is-drawer-close:tooltip is-drawer-close:tooltip-right btn btn-ghost btn-circle btn-sm"
+              class="btn-success is-drawer-close:tooltip is-drawer-close:tooltip-right btn btn-circle btn-sm"
               data-tip="设置"
-              @click="handleSettings"
+              @click="logout"
             >
-              <SettingsIcon></SettingsIcon>
+              <LogoutIcon></LogoutIcon>
             </label>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <!-- 新建会话弹窗 -->
+  <dialog id="addSessionBtn" class="modal">
+    <div class="modal-box w-full max-w-md shadow-2xl">
+      <!-- 关闭按钮 -->
+      <form method="dialog">
+        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+          ✕
+        </button>
+      </form>
 
-  <input type="checkbox" id="settingsBtn" class="modal-toggle" />
-  <div class="modal" role="dialog">
-    <div class="modal-box">
-      <h3 class="text-lg font-bold">设置</h3>
-      <p>退出登录</p>
-      <button class="btn btn-circle btn-sm btn-success" @click="logout">
-        <LogoutIcon></LogoutIcon>
-      </button>
+      <!-- 标题和描述 -->
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-base-content">新建会话</h3>
+        <!-- <p class="text-sm text-base-content/70 mt-1">
+          为会话取一个有意义的名称
+        </p> -->
+      </div>
+
+      <!-- 输入框 -->
+      <div class="form-control w-full">
+        <label class="label pb-2">
+          <!-- <span class="label-text font-medium">会话标题</span> -->
+        </label>
+        <input
+          v-model="sessionTitle"
+          type="text"
+          placeholder="请输入会话标题..."
+          class="input input-bordered input-sm w-full focus:outline-none focus:input-primary"
+          @keyup.enter="confirmAddSession"
+        />
+      </div>
+
+      <!-- 提示文字 -->
+      <p class="text-xs text-base-content/50 mt-2">最多可输入 50 个字符</p>
+
+      <!-- 按钮区域 -->
+      <div class="modal-action mt-6 gap-2">
+        <form method="dialog" class="flex gap-2 w-full">
+          <button class="btn btn-ghost flex-1">取消</button>
+          <button
+            type="button"
+            @click="confirmAddSession"
+            class="btn btn-primary flex-1"
+          >
+            创建
+          </button>
+        </form>
+      </div>
     </div>
-    <label class="modal-backdrop" for="settingsBtn">Close</label>
-  </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import BotIcon from "../icons/BotIcon.vue";
 import LogoIcon from "../icons/LogoIcon.vue";
 import PlusIcon from "../icons/PlusIcon.vue";
@@ -151,6 +180,7 @@ import LogoutIcon from "../icons/LogoutIcon.vue";
 
 import { useToast } from "vue-toast-notification";
 import "vue-toast-notification/dist/theme-sugar.css";
+import { addSession, getSession } from "@/api/chat/chat";
 
 const $toast = useToast();
 
@@ -158,17 +188,74 @@ const userStore = useUserStore();
 
 const username = computed(() => userStore.username);
 
-// 处理设置按钮点击
-const handleSettings = () => {
-  console.log("打开设置");
-  // 这里可以跳转到设置页面或打开设置弹窗
-  // router.push('/settings');
+const sessionTitle = ref("");
+
+interface Session {
+  id: string;
+  title: string;
+  createTime: string;
+}
+
+const sessionList = ref<Session[]>([]);
+
+const showAddSessionModal = () => {
+  const dialog = document.getElementById("addSessionBtn") as HTMLDialogElement;
+  dialog?.showModal();
 };
 
-const addSession = async () => {
-  console.log("添加会话");
-  // 这里可以跳转到添加会话页面或打开添加会话弹窗
-  // router.push('/add-session');
+const closeAddSessionModal = () => {
+  const dialog = document.getElementById("addSessionBtn") as HTMLDialogElement;
+  dialog?.close();
+};
+
+// 获取会话列表
+const loadSessionList = async () => {
+  try {
+    const res: any = await getSession(1, 10);
+    sessionList.value = res;
+  } catch (error) {
+    console.error("加载会话列表失败:", error);
+  }
+};
+
+// 初始化时加载
+onMounted(() => {
+  loadSessionList();
+});
+// 新增会话
+const confirmAddSession = async () => {
+  try {
+    if (!sessionTitle.value.trim()) {
+      $toast.open({
+        message: "请输入会话标题",
+        type: "warning",
+        position: "top-right",
+      });
+      return;
+    }
+
+    await addSession(sessionTitle.value);
+
+    $toast.open({
+      message: "添加成功",
+      type: "success",
+      position: "top-right",
+    });
+
+    // 重新加载会话列表
+    await loadSessionList();
+
+    // 清空输入框并关闭弹窗
+    sessionTitle.value = "";
+    closeAddSessionModal();
+  } catch (error) {
+    $toast.open({
+      message: "添加失败，请重试",
+      type: "error",
+      position: "top-right",
+    });
+    console.error(error);
+  }
 };
 
 const logout = async () => {
