@@ -62,6 +62,12 @@ export const useMessageStore = defineStore("message", () => {
     }
   }
 
+  // 批量设置消息列表
+  function setMessages(msgs: Message[]) {
+    message.value = msgs;
+    triggerRef(message);
+  }
+
   return {
     message,
     addUserMessage,
@@ -70,6 +76,7 @@ export const useMessageStore = defineStore("message", () => {
     removeAIMessage,
     updateAIMessageContent,
     markMessageComplete,
+    setMessages,
     sessionId,
     setSessionId,
   };
