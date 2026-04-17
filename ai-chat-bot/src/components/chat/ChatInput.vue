@@ -23,6 +23,12 @@
 import SendIcon from "../icons/SendIcon.vue";
 import { ref, watch } from "vue";
 import { useMessageStore } from "@/stores/message";
+import { useRoute } from "vue-router";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const route = useRoute();
 
 const messageStore = useMessageStore();
 const newMessage = ref<string>("");
@@ -52,13 +58,32 @@ async function sendMessage() {
 }
 
 async function fetchMessage(message: string) {
+  const token = localStorage.getItem("token");
+  const sessionId = route.params.id;
+
+  if (!token) {
+    throw new Error("未授权：请重新登录");
+  }
+
   const response = await fetch("/api/chat/stream", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      message,
+      session_id: sessionId, // 添加这个
+    }),
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      //跳转登录
+      localStorage.removeItem("token");
+      router.push("/login");
+      throw new Error("授权过期，请重新登录");
+    }
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
@@ -69,7 +94,6 @@ async function fetchMessage(message: string) {
   let fullContent = "";
   let aiMessageIndex = -1;
 
-  // 先添加一个空的 AI 消息
   messageStore.addAIMessage("");
   aiMessageIndex = messageStore.message.length - 1;
 
@@ -87,7 +111,6 @@ async function fetchMessage(message: string) {
             const data = JSON.parse(line.slice(6));
             if (data.content) {
               fullContent += data.content;
-              // 实时更新 UI
               messageStore.updateAIMessageContent(aiMessageIndex, fullContent);
             }
           } catch (e) {
