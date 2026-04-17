@@ -149,6 +149,11 @@ import { useUserStore } from "@/stores/user";
 
 import LogoutIcon from "../icons/LogoutIcon.vue";
 
+import { useToast } from "vue-toast-notification";
+import "vue-toast-notification/dist/theme-sugar.css";
+
+const $toast = useToast();
+
 const userStore = useUserStore();
 
 const username = computed(() => userStore.username);
@@ -167,11 +172,14 @@ const addSession = async () => {
 };
 
 const logout = async () => {
-  console.log("退出登录");
   // 这里可以跳转到登录页面或打开登录弹窗
   router.push("/login");
+  $toast.open({
+    message: "退出登录",
+    type: "success",
+    position: "top-right",
+  });
   userStore.logout();
-  window.location.reload();
 };
 </script>
 

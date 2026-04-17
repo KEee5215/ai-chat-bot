@@ -30,6 +30,11 @@ import { userLogin } from "@/api/user/user";
 import { ref } from "vue";
 
 import { useRouter } from "vue-router";
+
+import { useToast } from "vue-toast-notification";
+import "vue-toast-notification/dist/theme-bootstrap.css";
+
+const $toast = useToast();
 const router = useRouter();
 
 const username = ref("");
@@ -62,6 +67,11 @@ async function login() {
       console.log("Token 已保存:", response.access_token);
 
       // 跳转到主页
+      $toast.open({
+        message: "登录成功！",
+        type: "success",
+        position: "top-right",
+      });
       router.push("/chat");
       // alert("登录成功！");
     } else {
