@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-full w-full">
-    <div class="flex-1 overflow-y-auto pb-32">
+    <div class="flex-1 overflow-y-auto py-32">
       <MessageItem
         v-for="item in message"
         :content="item.content"
@@ -17,20 +17,31 @@
 
 <script setup lang="ts">
 import { useRoute } from "vue-router";
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import MessageItem from "../message/MessageItem.vue";
 
 import { useMessageStore } from "@/stores/message";
 import ChatInput from "./ChatInput.vue";
+import { getMessage } from "@/api/chat/chat";
+interface Message {
+  id?: string;
+  role: string;
+  content: string;
+  createdAt?: string;
+}
 
 const messageStore = useMessageStore();
 
-const message = ref(messageStore.message);
-
 const route = useRoute();
-//通过这个id来查询对话历史
-const id = ref(route.params.id);
 
-//把id存入pinia
-console.log(route.params.id);
+const message = ref<Message[]>();
+
+onMounted(async () => {
+  const sessionId = route.params.id as string;
+  messageStore.setSessionId(sessionId);
+  console.log(sessionId);
+  let res: any = await getMessage(sessionId, 10);
+  console.log(res);
+  message.value = res;
+});
 </script>

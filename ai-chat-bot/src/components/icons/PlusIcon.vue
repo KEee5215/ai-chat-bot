@@ -8,14 +8,14 @@
   >
     <path
       d="M24.0605 10L24.0239 38"
-      stroke="#0f0f0f"
+      stroke="#00d390"
       stroke-width="4"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
     <path
       d="M10 24L38 24"
-      stroke="#0f0f0f"
+      stroke="#00d390"
       stroke-width="4"
       stroke-linecap="round"
       stroke-linejoin="round"

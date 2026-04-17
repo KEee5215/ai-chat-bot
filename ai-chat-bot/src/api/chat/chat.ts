@@ -17,5 +17,7 @@ export const getSession = (page: number, pageSize: number) => {
 
 // 获取会话内的消息列表
 export const getMessage = (sessionId: string, limit: number) => {
-  return service.get(`/chat/sessions/${sessionId}/message?limit=${limit}`);
+  return service.get(`/chat/sessions/${sessionId}/messages`, {
+    params: { limit },
+  });
 };

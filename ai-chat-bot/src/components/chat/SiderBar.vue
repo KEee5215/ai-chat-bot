@@ -69,10 +69,12 @@
           </li>
 
           <!-- List item -->
-          <li v-for="session in sessionList">
+          <li v-for="session in sessionList" :key="session.id">
             <button
+              :class="{ 'menu-active': sessionId === session.id }"
               class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-              data-tip="某个会话"
+              :data-tip="session.title"
+              @click="selectSession(session)"
             >
               <!-- Settings icon -->
               <BotIcon></BotIcon>
@@ -181,14 +183,18 @@ import LogoutIcon from "../icons/LogoutIcon.vue";
 import { useToast } from "vue-toast-notification";
 import "vue-toast-notification/dist/theme-sugar.css";
 import { addSession, getSession } from "@/api/chat/chat";
+import { useMessageStore } from "@/stores/message";
 
 const $toast = useToast();
 
 const userStore = useUserStore();
+const messageStore = useMessageStore();
 
 const username = computed(() => userStore.username);
 
 const sessionTitle = ref("");
+
+const sessionId = ref(messageStore.sessionId);
 
 interface Session {
   id: string;
@@ -198,11 +204,21 @@ interface Session {
 
 const sessionList = ref<Session[]>([]);
 
+// 选中会话
+const selectSession = (session: Session) => {
+  sessionId.value = session.id;
+  messageStore.setSessionId(session.id);
+  // 可选：跳转到对应会话页面
+  router.push(`/chat/${session.id}`);
+};
+
+// 显示新建会话弹窗
 const showAddSessionModal = () => {
   const dialog = document.getElementById("addSessionBtn") as HTMLDialogElement;
   dialog?.showModal();
 };
 
+// 关闭新建会话弹窗
 const closeAddSessionModal = () => {
   const dialog = document.getElementById("addSessionBtn") as HTMLDialogElement;
   dialog?.close();

@@ -1,7 +1,14 @@
 <template>
   <div v-if="props.role === 'user'" :class="chatClass">
+    <div class="chat-image avatar">
+      <div class="w-10 rounded-full">
+        <img
+          src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
+        />
+      </div>
+    </div>
     <div :class="chatBubbleClass">
-      <AIMarkdown :content="content" />
+      {{ props.content }}
     </div>
   </div>
   <div v-else class="m-6 px-4 py-6">

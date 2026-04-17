@@ -11,7 +11,7 @@ const router = createRouter({
         {
           // 当 /user/:id/profile 匹配成功
           // UserProfile 将被渲染到 User 的 <router-view> 内部
-          path: "/:id",
+          path: "/chat/:id",
           name: "chat",
           component: () => import("@/components/chat/ChatContainer.vue"),
         },

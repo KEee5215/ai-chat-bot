@@ -13,36 +13,36 @@
       height="24"
       rx="2"
       fill="none"
-      stroke="#0f0f0f"
+      stroke="#00d390"
       stroke-width="4"
     />
-    <circle cx="17" cy="26" r="2" fill="#0f0f0f" />
-    <circle cx="31" cy="26" r="2" fill="#0f0f0f" />
+    <circle cx="17" cy="26" r="2" fill="#00d390" />
+    <circle cx="31" cy="26" r="2" fill="#00d390" />
     <path
       d="M20 32C18.8954 32 18 32.8954 18 34C18 35.1046 18.8954 36 20 36V32ZM28 36C29.1046 36 30 35.1046 30 34C30 32.8954 29.1046 32 28 32V36ZM20 36H28V32H20V36Z"
-      fill="#0f0f0f"
+      fill="#00d390"
     />
     <path
       d="M24 10V18"
-      stroke="#0f0f0f"
+      stroke="#00d390"
       stroke-width="4"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
     <path
       d="M4 26V34"
-      stroke="#0f0f0f"
+      stroke="#00d390"
       stroke-width="4"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
     <path
       d="M44 26V34"
-      stroke="#0f0f0f"
+      stroke="#00d390"
       stroke-width="4"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
-    <circle cx="24" cy="8" r="2" stroke="#0f0f0f" stroke-width="4" />
+    <circle cx="24" cy="8" r="2" stroke="#00d390" stroke-width="4" />
   </svg>
 </template>
