@@ -254,20 +254,15 @@ class ChatMessageRepository:
         Returns:
             消息列表(按时间正序)
         """
-        # 先验证会话归属
-        session_stmt = select(ChatSession).where(
-            ChatSession.id == session_id,
-            ChatSession.user_id == user_id,
-            ChatSession.is_deleted == False
-        )
-        session_result = await self.session.execute(session_stmt)
-        if not session_result.scalars().first():
-            return []
-        
-        # 查询最近N条消息
+        # 优化: 使用 JOIN 一次性验证会话并查询消息
         stmt = (
             select(ChatMessage)
-            .where(ChatMessage.session_id == session_id)
+            .join(ChatSession, ChatMessage.session_id == ChatSession.id)
+            .where(
+                ChatMessage.session_id == session_id,
+                ChatSession.user_id == user_id,
+                ChatSession.is_deleted == False
+            )
             .order_by(ChatMessage.created_at.desc())
             .limit(n)
         )

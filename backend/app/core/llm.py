@@ -5,10 +5,12 @@ from openai import AsyncOpenAI
 from app.settings import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
 
 
-# 初始化 OpenAI 客户端
+# 初始化 OpenAI 客户端(配置超时和连接池)
 client = AsyncOpenAI(
     api_key=OPENAI_API_KEY,
-    base_url=OPENAI_BASE_URL  # 支持自定义 API 地址(如国内代理)
+    base_url=OPENAI_BASE_URL,  # 支持自定义 API 地址(如国内代理)
+    timeout=60.0,  # 请求超时时间(秒)
+    max_retries=2  # 最大重试次数
 )
 
 

@@ -95,6 +95,9 @@ async def stream_chat(
         "system_prompt": "可选的系统提示"
     }
     """
+    import time
+    start_time = time.time()
+    print(f"[性能] 收到聊天请求 - 用户ID: {user_id}, 会话ID: {request_body.session_id}")
 
     user_message = request_body.message
     session_id = request_body.session_id
@@ -112,6 +115,8 @@ async def stream_chat(
         if not chat_session:
             raise HTTPException(status_code=404, detail="会话不存在或无权访问")
     
+    print(f"[性能] 会话验证耗时: {time.time() - start_time:.2f}s")
+    
     # 保存用户消息
     message_repo = ChatMessageRepository(session)
     await message_repo.add_message(
@@ -121,11 +126,13 @@ async def stream_chat(
     )
     
     # 获取历史对话(最近20条)
+    history_start = time.time()
     history_messages = await message_repo.get_last_n_messages(
         session_id=session_id,
         user_id=user_id,
         n=20
     )
+    print(f"[性能] 查询历史消息耗时: {time.time() - history_start:.2f}s, 消息数: {len(history_messages)}")
     
     # 构建消息列表(不包含刚添加的用户消息,因为会重复)
     history = [
@@ -140,27 +147,43 @@ async def stream_chat(
     
     async def generate():
         """生成流式响应"""
+        import time
+        llm_start = time.time()
         assistant_response = ""
+        chunk_count = 0
+        
         try:
+            # 流式调用 LLM
             async for chunk in chat_stream(messages):
+                chunk_count += 1
                 assistant_response += chunk
-                # SSE 格式
+                # SSE 格式 - 立即发送给前端
                 yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
                 await asyncio.sleep(0)  # 让出控制权
             
-            # 保存 AI 回复
-            await message_repo.add_message(
-                session_id=session_id,
-                role="assistant",
-                content=assistant_response
-            )
+            llm_time = time.time() - llm_start
+            print(f"[性能] LLM 调用耗时: {llm_time:.2f}s, 块数: {chunk_count}, 总长度: {len(assistant_response)}")
             
         except Exception as e:
             error_msg = str(e)
+            print(f"[错误] LLM 调用失败: {e}")
             yield f"data: {json.dumps({'error': error_msg}, ensure_ascii=False)}\n\n"
         finally:
             # 发送结束标记
             yield f"data: {json.dumps({'done': True, 'session_id': session_id}, ensure_ascii=False)}\n\n"
+            
+            # 异步保存 AI 回复(不阻塞响应)
+            try:
+                save_start = time.time()
+                await message_repo.add_message(
+                    session_id=session_id,
+                    role="assistant",
+                    content=assistant_response
+                )
+                print(f"[性能] 保存消息耗时: {time.time() - save_start:.2f}s")
+            except Exception as e:
+                # 保存失败不影响用户体验,只记录日志
+                print(f"[错误] 保存消息失败: {e}")
     
     return StreamingResponse(
         generate(),

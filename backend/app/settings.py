@@ -18,7 +18,7 @@ MAIL_SSL_TLS = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
 # JWT 配置
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 600
 
 # OpenAI 配置
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
