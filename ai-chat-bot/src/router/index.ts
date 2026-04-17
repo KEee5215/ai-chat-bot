@@ -7,6 +7,7 @@ const router = createRouter({
     {
       path: "/",
       component: ChatView,
+      redirect: "/chat",
       children: [
         {
           // 当 /user/:id/profile 匹配成功

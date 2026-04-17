@@ -1,30 +1,28 @@
 <template>
   <div
-    class="flex flex-col h-full w-full bg-gradient-to-b from-base-100 to-base-200"
+    class="flex flex-col h-screen w-full bg-gradient-to-b from-base-100 to-base-200"
   >
     <!-- 欢迎区域 -->
     <div class="flex-1 flex flex-col items-center justify-center px-4">
       <!-- Logo 和标题 -->
       <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold mb-2">AI Chat Bot</h1>
+        <h1 class="text-8xl font-bold mb-2">KEEE Chat</h1>
         <p class="text-base-content/60">
-          Start a conversation or continue where you left off
+          请选择开启一个新对话还是继续之前的对话
         </p>
       </div>
 
       <!-- 新建会话按钮 -->
       <button
         @click="startNewSession"
-        class="btn btn-primary btn-lg mb-12 px-8"
+        class="btn btn-success btn-lg mb-12 px-8"
       >
-        <span class="text-lg">+ New Chat</span>
+        <span class="text-lg"> 创建一个新对话</span>
       </button>
 
       <!-- 历史会话列表 -->
       <div v-if="sessionList.length > 0" class="w-full max-w-2xl">
-        <h2 class="text-lg font-semibold mb-4 text-center">
-          Recent Conversations
-        </h2>
+        <h2 class="text-lg font-semibold mb-4 text-center">最近的会话</h2>
         <div class="grid gap-3">
           <button
             v-for="session in sessionList"
@@ -45,8 +43,8 @@
 
       <!-- 空状态提示 -->
       <div v-else class="text-center text-base-content/50">
-        <p class="mb-4">No conversations yet</p>
-        <p class="text-sm">Create a new one to get started</p>
+        <p class="mb-4">尚未有任何会话历史</p>
+        <p class="text-sm">点击上方按钮,开启一个新会话</p>
       </div>
     </div>
 
@@ -62,17 +60,15 @@
         </form>
 
         <div class="mb-6">
-          <h3 class="text-2xl font-bold">New Conversation</h3>
-          <p class="text-sm text-base-content/60 mt-1">
-            Give your conversation a name
-          </p>
+          <h3 class="text-2xl font-bold">新建会话</h3>
+          <p class="text-sm text-base-content/60 mt-1">给本次会话起个名字</p>
         </div>
 
         <div class="form-control w-full">
           <input
             v-model="newSessionTitle"
             type="text"
-            placeholder="e.g., Project Discussion"
+            placeholder="请输入会话标题..."
             class="input input-bordered w-full focus:outline-none focus:input-primary"
             @keyup.enter="confirmNewSession"
           />
@@ -80,19 +76,19 @@
 
         <div class="modal-action mt-6 gap-2">
           <form method="dialog" class="flex gap-2 w-full">
-            <button class="btn btn-ghost flex-1">Cancel</button>
+            <button class="btn btn-ghost flex-1">取消</button>
             <button
               type="button"
               @click="confirmNewSession"
               class="btn btn-primary flex-1"
             >
-              Create
+              创建
             </button>
           </form>
         </div>
       </div>
       <form method="dialog" class="modal-backdrop">
-        <button>close</button>
+        <button>关闭</button>
       </form>
     </dialog>
   </div>
@@ -103,6 +99,7 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useToast } from "vue-toast-notification";
 import { getSession, addSession } from "@/api/chat/chat";
+import PlusIcon from "../icons/PlusIcon.vue";
 
 const router = useRouter();
 const $toast = useToast();
