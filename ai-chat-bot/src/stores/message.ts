@@ -1,4 +1,4 @@
-import { ref, computed } from "vue";
+import { ref, shallowRef, triggerRef } from "vue";
 import { defineStore } from "pinia";
 
 export const useMessageStore = defineStore("message", () => {
@@ -11,52 +11,55 @@ export const useMessageStore = defineStore("message", () => {
   }
 
   interface Message {
+    id?: string;
     role: string;
     content: string;
+    createdAt?: string;
+    isStreaming?: boolean;
   }
 
-  const message = ref<Message[]>([
-    { role: "user", content: "hello" },
-    {
-      role: "assistant",
-      content:
-        "# hello, \n ## aisd *ioha* sdoaisdhasidh<br>nsdnaiosdioasdadaiosdn",
-    },
-    { role: "user", content: "hello" },
-    { role: "assistant", content: "hello" },
-    { role: "user", content: "hello" },
-    { role: "assistant", content: "helloasasfasfasfasf\n牛啊猴儿好大苏打" },
-    { role: "user", content: "hello" },
-    {
-      role: "assistant",
-      content:
-        "# hello, \n ## aisd *ioha* sdoaisdhasidh<br>nsdnaiosdioasdadaiosdn",
-    },
-    { role: "user", content: "hello" },
-    { role: "assistant", content: "hello" },
-  ]);
+  // 使用 shallowRef 避免深度监听性能问题
+  const message = shallowRef<Message[]>([]);
 
   function addUserMessage(content: string) {
-    message.value.push({ role: "user", content });
+    const msgs = message.value;
+    msgs.push({ role: "user", content });
+    triggerRef(message);
   }
 
   function removeUserMessage(index: number) {
     message.value.splice(index, 1);
+    triggerRef(message);
   }
 
   function addAIMessage(content: string) {
-    message.value.push({ role: "assistant", content });
+    const msgs = message.value;
+    msgs.push({ role: "assistant", content, isStreaming: true });
+    triggerRef(message);
   }
 
-  // 更新AI消息内容
+  // 更新AI消息内容 - 原地修改，不触发响应式
   function updateAIMessageContent(index: number, content: string) {
-    if (message.value[index]) {
-      message.value[index].content = content;
+    const msgs = message.value;
+    if (msgs[index]) {
+      msgs[index].content = content;
+      // 手动触发更新
+      triggerRef(message);
     }
   }
 
   function removeAIMessage(index: number) {
     message.value.splice(index, 1);
+    triggerRef(message);
+  }
+
+  // 标记消息流式完成
+  function markMessageComplete(index: number) {
+    const msgs = message.value;
+    if (msgs[index]) {
+      msgs[index].isStreaming = false;
+      triggerRef(message);
+    }
   }
 
   return {
@@ -66,6 +69,7 @@ export const useMessageStore = defineStore("message", () => {
     addAIMessage,
     removeAIMessage,
     updateAIMessageContent,
+    markMessageComplete,
     sessionId,
     setSessionId,
   };

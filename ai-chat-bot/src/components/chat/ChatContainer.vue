@@ -2,7 +2,8 @@
   <div class="flex flex-col h-full w-full">
     <div class="flex-1 overflow-y-auto py-32">
       <MessageItem
-        v-for="item in message"
+        v-for="(item, index) in message"
+        :key="item.id"
         :content="item.content"
         :role="item.role"
       />
@@ -17,7 +18,7 @@
 
 <script setup lang="ts">
 import { useRoute } from "vue-router";
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import MessageItem from "../message/MessageItem.vue";
 
 import { useMessageStore } from "@/stores/message";
@@ -34,14 +35,28 @@ const messageStore = useMessageStore();
 
 const route = useRoute();
 
-const message = ref<Message[]>();
+const message = computed(() => messageStore.message); // 使用 computed 保持响应式
+
+const messageListRef = ref<HTMLDivElement>();
+
+// 监听消息变化，自动滚动
+watch(
+  () => messageStore.message,
+  async () => {
+    await nextTick();
+    if (messageListRef.value) {
+      messageListRef.value.scrollTop = messageListRef.value.scrollHeight;
+    }
+  },
+  { deep: true },
+);
 
 onMounted(async () => {
   const sessionId = route.params.id as string;
   messageStore.setSessionId(sessionId);
-  console.log(sessionId);
-  let res: any = await getMessage(sessionId, 10);
-  console.log(res);
-  message.value = res;
+  // console.log(sessionId);
+  let res: any = await getMessage(sessionId, 50);
+  // console.log(res);
+  // message.value = res;
 });
 </script>
