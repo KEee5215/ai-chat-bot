@@ -30,8 +30,10 @@
         <div class="px-4">AI-Chat-Bot</div>
       </nav>
       <!-- Page content here -->
-      <div class="p-4">
-        <RouterView></RouterView>
+      <div class="w-full h-screen flex flex-col pt-16 lg:pl-64">
+        <div class="flex-1 p-4 overflow-auto">
+          <RouterView></RouterView>
+        </div>
       </div>
     </div>
 

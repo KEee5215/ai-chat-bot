@@ -1,21 +1,24 @@
 <template>
-  <div
-    class="flex gap-2 w-600 max-w-full px-4 py-4 items-center justify-center"
-  >
-    <textarea
-      placeholder="type something ..."
-      class="textarea flex-1 resize-none min-h-12 max-w-120"
-      v-model="newMessage"
-      :disabled="isLoading"
-    ></textarea>
-    <button
-      :disabled="isNull || isLoading"
-      class="btn btn-neutral btn-circle"
-      @click="sendMessage"
-    >
-      <SendIcon v-if="!isLoading"></SendIcon>
-      <span v-else class="loading loading-spinner loading-sm"></span>
-    </button>
+  <div class="flex flex-col gap-2 w-full max-w-2xl mx-auto px-4 py-4">
+    <input type="file" class="file-input file-input-ghost w-full" />
+
+    <div class="flex gap-2 items-end">
+      <textarea
+        placeholder="type something ..."
+        class="textarea flex-1 resize-none min-h-12"
+        v-model="newMessage"
+        :disabled="isLoading"
+      ></textarea>
+
+      <button
+        :disabled="isNull || isLoading"
+        class="btn btn-neutral btn-circle"
+        @click="sendMessage"
+      >
+        <SendIcon v-if="!isLoading"></SendIcon>
+        <span v-else class="loading loading-spinner loading-sm"></span>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -45,11 +48,14 @@ async function sendMessage() {
   const userInput = newMessage.value;
   console.log("准备发送消息:", userInput);
   console.log("发送前 messageStore.message 长度:", messageStore.message.length);
-  
+
   messageStore.addUserMessage(userInput);
-  console.log("添加用户消息后 messageStore.message 长度:", messageStore.message.length);
+  console.log(
+    "添加用户消息后 messageStore.message 长度:",
+    messageStore.message.length,
+  );
   console.log("当前消息列表:", messageStore.message);
-  
+
   newMessage.value = "";
   isLoading.value = true;
 
