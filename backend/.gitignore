@@ -41,3 +41,15 @@ alembic/__pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+
+
+# --- 向量数据库 ---
+chroma_db/
+*.sqlite
+*.bin
+
+# --- Python 缓存 ---
+.venv/
+
+#上传文件
+uploads/
