@@ -1,6 +1,7 @@
 # app/main.py
 from contextlib import asynccontextmanager
 from typing import Annotated
+from app.services.rag_service import RAGService
 
 from fastapi import FastAPI ,Depends,Request
 from fastapi.exceptions import RequestValidationError
@@ -64,6 +65,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content=error_response(code=422, msg=str(exc.errors()))
     )
 
+rag = RAGService()
+# 如果成功初始化，说明模型已加载
+print("Embedding模型加载成功！")
+
+# 测试向量化
+test_embedding = rag.embedding_model.embed_query("你好世界")
+print(f"向量维度: {len(test_embedding)}")  # 应该是51
 
 @app.get("/")
 async def root():

@@ -58,18 +58,21 @@ async def upload_document(
     year_month = datetime.now().strftime("%Y/%m")
     storage_dir = Path(UPLOAD_BASE_PATH) / year_month
     storage_dir.mkdir(parents=True, exist_ok=True)
-    # 时间戳命名
-    storage_filename = f"{datetime.now().timestamp()}.{file_extension}"
+    
+    # 使用时间戳 + 原始文件名（不含扩展名）+ 扩展名
+    from pathlib import PurePath
+    original_name_without_ext = PurePath(file.filename).stem  # 去除扩展名
+    storage_filename = f"{int(datetime.now().timestamp())}_{original_name_without_ext}.{file_extension}"
     storage_path = storage_dir / storage_filename
 
     # 6. 保存文件
     with open(storage_path, "wb") as f:
         f.write(content)
 
-    # 7. 创建数据库记录
-    relative_path = f"/{UPLOAD_BASE_PATH}/{year_month}/{storage_filename}"
+    # 7. 创建数据库记录（使用相对路径，不带前导斜杠）
+    relative_path = f"{UPLOAD_BASE_PATH}/{year_month}/{storage_filename}"
     document = doc_repo.create(
-        user_id=current_user.id,
+        user_id=current_user["user_id"],
         original_name=file.filename,
         storage_path=relative_path,
         file_size=len(content),
@@ -97,25 +100,31 @@ async def rag_query(
     需要传入session_id和document_ids
     """
     # 1. 验证会话归属
-    from app.repository.chat_repo import ChatSessionRepository
-    session_repo = ChatSessionRepository(db)
-    session = session_repo.get_by_id(session_id)
+    from sqlalchemy import select
+    from app.models.chat import ChatSession
+    
+    stmt = select(ChatSession).where(
+        ChatSession.id == session_id,
+        ChatSession.user_id == current_user["user_id"]
+    )
+    result = db.execute(stmt)
+    session = result.scalars().first()
 
-    if not session or session.user_id != current_user.id:
-        return response.error_response({ "message": "会话不存在或无访问权限"})
+    if not session:
+        return response.error_response({"message": "会话不存在或无访问权限"})
 
     # 2. 验证文档归属
     doc_repo = DocumentRepository(db)
     for doc_id in document_ids:
         doc = doc_repo.get_by_id(doc_id)
-        if not doc or doc.user_id != current_user.id:
+        if not doc or doc.user_id != current_user["user_id"]:
             return response.error_response({ "message": "文档不存在或无访问权限"})
 
     # 3. 执行RAG查询
     rag_service = RAGService()
-    result = await rag_service.query_rag_stream(
+    result = await rag_service.query_rag(
         session_id=session_id,
-        user_id=current_user.id,
+        user_id=current_user["user_id"],
         document_ids=document_ids,
         question=question,
         db=db
@@ -130,7 +139,8 @@ async def rag_query(
             {
                 "document_id": doc.metadata.get("document_id"),
                 "filename": doc.metadata.get("original_filename"),
-                "preview": doc.page_content[:200]
+                "preview": doc.page_content[:200],
+                "score": None  # ChromaDB 默认不返回分数
             }
             for doc in result.get("source_documents", [])
         ]
