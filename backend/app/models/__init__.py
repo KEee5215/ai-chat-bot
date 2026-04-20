@@ -1,7 +1,9 @@
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 
 from app.settings import DB_URI
 
@@ -20,6 +22,25 @@ engine = create_async_engine(
 AsyncSessionMaker = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+# 同步引擎和会话工厂（用于RAG等同步操作）
+SYNC_DB_URI = DB_URI.replace("+asyncmy", "+pymysql").replace("+aiomysql", "+pymysql")
+sync_engine = create_engine(
+    SYNC_DB_URI,
+    echo=False,
+    future=True,
+    pool_pre_ping=True,
+    pool_recycle=3600,
+    pool_timeout=30,
+    pool_size=10,
+    max_overflow=20,
+)
+
+SyncSessionMaker = sessionmaker(
+    bind=sync_engine,
+    class_=Session,
     expire_on_commit=False,
 )
 
@@ -43,5 +64,4 @@ class Base(DeclarativeBase):
 
 # 在文件底部导入所有模型，确保 Base 已完全定义
 from . import user
-from . import article
 from . import chat

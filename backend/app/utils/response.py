@@ -11,10 +11,10 @@ def success_response(data: Any = None, msg: str = "成功") -> dict:
     }
 
 
-def error_response(code: int = 400, msg: str = "失败", data: Any = None) -> dict:
+def error_response( data: Any = None) -> dict:
     """错误响应"""
     return {
-        "code": code,
+        "code": 400,
         "data": data,
-        "msg": msg
+        "msg": "失败,原因见 data"
     }

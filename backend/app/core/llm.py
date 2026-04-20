@@ -2,6 +2,7 @@
 import os
 from typing import AsyncGenerator, Optional
 from openai import AsyncOpenAI
+from langchain_openai import ChatOpenAI
 from app.settings import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL
 
 
@@ -132,3 +133,31 @@ def build_messages(
         messages.append({"role": "user", "content": user_message})
     
     return messages
+
+
+def get_llm(
+    model: str = OPENAI_MODEL,
+    temperature: float = 0.7,
+    max_tokens: Optional[int] = None,
+    **kwargs
+) -> ChatOpenAI:
+    """
+    获取 LangChain 兼容的 LLM 实例
+    
+    Args:
+        model: 模型名称
+        temperature: 温度参数
+        max_tokens: 最大 token 数
+        **kwargs: 其他参数
+    
+    Returns:
+        ChatOpenAI 实例
+    """
+    return ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        api_key=OPENAI_API_KEY,
+        base_url=OPENAI_BASE_URL,
+        **kwargs
+    )
