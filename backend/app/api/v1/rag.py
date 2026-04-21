@@ -118,6 +118,21 @@ async def upload_document(
         session.is_rag_session = True
         
         db.commit()
+        
+        # 8. 立即索引新上传的文档到 ChromaDB
+        try:
+            rag_service = RAGService()
+            rag_service._index_single_document_to_session(
+                document_id=document.id,
+                session_id=session_id,
+                user_id=current_user["user_id"],
+                db=db
+            )
+        except Exception as e:
+            # 索引失败不影响上传，但记录日志
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"文档索引失败: {str(e)}")
 
     return response.success_response(data={
         "document_id": document.id,
@@ -357,3 +372,69 @@ async def get_rag_history(
         "total_pages": (total + page_size - 1) // page_size if page_size > 0 else 0,
         "history": history
     })
+
+
+@router.get("/sessions/{session_id}/vector-info", response_model=ApiResponse)
+async def get_vector_collection_info(
+        session_id: int,
+        current_user=Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """
+    获取会话向量数据库的信息（调试用）
+    
+    Path Parameters:
+        session_id: 会话ID
+    
+    Returns:
+        Collection 中的文档数量和元数据信息
+    """
+    from chromadb.config import Settings
+    import chromadb
+    from app.services.rag_service import RAGService
+    
+    # 1. 验证会话归属
+    from sqlalchemy import select
+    from app.models.chat import ChatSession
+    
+    stmt = select(ChatSession).where(
+        ChatSession.id == session_id,
+        ChatSession.user_id == current_user["user_id"]
+    )
+    result = db.execute(stmt)
+    session = result.scalars().first()
+
+    if not session:
+        return response.error_response({"message": "会话不存在或无访问权限"})
+
+    # 2. 获取 Collection 信息
+    rag_service = RAGService()
+    chroma_client = chromadb.PersistentClient(
+        path="./chroma_db",
+        settings=Settings(anonymized_telemetry=False)
+    )
+    
+    collection_name = rag_service._get_collection_name(current_user["user_id"], session_id)
+    
+    try:
+        collection = chroma_client.get_collection(collection_name)
+        count = collection.count()
+        
+        # 获取部分样本数据
+        sample_data = None
+        if count > 0:
+            sample = collection.peek(limit=3)
+            sample_data = {
+                "ids": sample.get("ids", []),
+                "metadatas": sample.get("metadatas", [])
+            }
+        
+        return response.success_response(data={
+            "collection_name": collection_name,
+            "document_count": count,
+            "sample_data": sample_data
+        })
+    except Exception as e:
+        return response.error_response({
+            "message": f"获取 Collection 信息失败: {str(e)}"
+        })

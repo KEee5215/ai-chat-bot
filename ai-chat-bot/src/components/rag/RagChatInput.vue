@@ -51,10 +51,17 @@ async function handleFileSelect(event: Event) {
   const files = target.files;
   if (files && files.length > 0) {
     try {
-      await uploadFile(files[0] as File);
+      const sessionId = messageStore.sessionId;
+      if (!sessionId) {
+        console.error("未找到会话ID");
+        return;
+      }
+      await uploadFile(files[0] as File, sessionId);
       console.log("文件上传完成");
     } catch (error) {
       console.error("文件上传失败:", error);
+      // 可选：显示错误提示
+      alert(error instanceof Error ? error.message : "文件上传失败");
     }
     // 重置 input
     target.value = "";

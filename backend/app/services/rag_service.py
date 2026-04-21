@@ -26,9 +26,9 @@ class RAGService:
         self.embedding_model = self._load_embedding_model()
         self.llm = get_llm()  # 复用你现有的LLM配置
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,
-            chunk_overlap=100,
-            separators=["\n\n", "\n", "。", "！", "？", " ", ""]
+            chunk_size=250,  # 减小分块大小，提高检索精度
+            chunk_overlap=100,  # 增加重叠，保持上下文连贯性
+            separators=["\n\n", "\n", "。", "！", "？", ".", "!", "?", " ", ""]
         )
 
     def _load_embedding_model(self):
@@ -145,6 +145,62 @@ class RAGService:
         else:
             logger.warning("⚠️ 没有片段需要存入")
 
+    def _index_single_document_to_session(self, document_id: int,
+                                          session_id: int,
+                                          user_id: int,
+                                          db):
+        """
+        将单个文档索引到指定会话的 Collection 中
+        用于上传文件时立即索引
+        """
+        from chromadb.config import Settings
+        import chromadb
+        from app.repository.document_repo import DocumentRepository
+        
+        logger.info(f"\n🔧 开始索引单个文档 {document_id} 到会话 {session_id}")
+        
+        # 1. 获取或创建 Collection
+        chroma_client = chromadb.PersistentClient(
+            path="./chroma_db",
+            settings=Settings(anonymized_telemetry=False)
+        )
+        
+        collection_name = self._get_collection_name(user_id, session_id)
+        
+        # 确保 Collection 存在
+        existing_collections = chroma_client.list_collections()
+        collection_exists = any(c.name == collection_name for c in existing_collections)
+        
+        if not collection_exists:
+            logger.info(f"🆕 Collection 不存在，创建新的 Collection")
+        
+        vector_store = Chroma(
+            collection_name=collection_name,
+            embedding_function=self.embedding_model,
+            client=chroma_client
+        )
+        
+        # 2. 加载并分割文档
+        doc_repo = DocumentRepository(db)
+        doc = doc_repo.get_by_id(document_id)
+        
+        if not doc:
+            raise ValueError(f"文档 {document_id} 不存在")
+        
+        logger.info(f"📄 加载文档: {doc.original_name}")
+        chunks = self._load_and_split_document(doc)
+        logger.info(f"✂️ 分割成 {len(chunks)} 个片段")
+        
+        # 3. 添加到向量数据库
+        if chunks:
+            for chunk in chunks:
+                chunk.metadata["source_type"] = "rag_document"
+            
+            vector_store.add_documents(chunks)
+            logger.info(f"✅ 成功索引 {len(chunks)} 个片段到 Collection: {collection_name}")
+        else:
+            logger.warning("⚠️ 没有片段需要索引")
+
     def _load_and_split_document(self, doc: Document) -> List:
         """
         加载并分割文档
@@ -185,6 +241,8 @@ class RAGService:
         for chunk in chunks:
             chunk.metadata["document_id"] = doc.id
             chunk.metadata["original_filename"] = doc.original_name
+        
+        logger.info(f"   📝 第一个片段的元数据: {chunks[0].metadata if chunks else '无'}")
 
         return chunks
 
