@@ -3,7 +3,7 @@ import axios from "axios";
 // ===== 1. 创建实例 =====
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
-  timeout: 5000,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json;charset=UTF-8",
   },
@@ -69,7 +69,7 @@ service.interceptors.response.use(
     removePending(response.config);
 
     const res = response.data;
-    
+
     // 判断后端返回格式
     // 格式1: { code: 200, data: {...}, msg: "成功" }
     // 格式2: 直接返回业务数据 { user_id, username, token }
@@ -78,7 +78,7 @@ service.interceptors.response.use(
       if (res.code === 200 || res.code === 0) {
         return res.data || res; // 返回 data 或整个响应
       }
-      
+
       // 统一错误提示
       const uni = getUni();
       if (uni && uni.showToast) {
@@ -95,6 +95,11 @@ service.interceptors.response.use(
   },
   (error) => {
     removePending(error.config);
+
+    // 如果是请求被取消的错误，直接返回，不显示提示
+    if (error.name === "CanceledError" || error.code === "ERR_CANCELED") {
+      return Promise.reject(error);
+    }
 
     let msg = "网络异常，请稍后重试";
     if (error.message?.includes("timeout")) msg = "请求超时";

@@ -13,7 +13,7 @@ class ChatSession(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(200), default="新对话")  # 会话标题
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)  # 软删除标记
+    is_rag_session: Mapped[bool] = mapped_column(Boolean, default=False)  # 是否为RAG会话（上传过文件）
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
 

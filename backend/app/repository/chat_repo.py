@@ -26,7 +26,7 @@ class ChatSessionRepository:
         session = ChatSession(
             user_id=user_id,
             title=title,
-            is_deleted=False,
+            is_rag_session=False,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -47,8 +47,7 @@ class ChatSessionRepository:
         """
         stmt = select(ChatSession).where(
             ChatSession.id == session_id,
-            ChatSession.user_id == user_id,
-            ChatSession.is_deleted == False
+            ChatSession.user_id == user_id
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()
@@ -69,8 +68,7 @@ class ChatSessionRepository:
         stmt = (
             select(ChatSession)
             .where(
-                ChatSession.user_id == user_id,
-                ChatSession.is_deleted == False
+                ChatSession.user_id == user_id
             )
             .order_by(ChatSession.updated_at.desc())
             .offset(offset)
@@ -104,29 +102,7 @@ class ChatSessionRepository:
 
     async def delete_session(self, session_id: int, user_id: int) -> bool:
         """
-        软删除会话(标记为已删除)
-        
-        Args:
-            session_id: 会话ID
-            user_id: 用户ID(用于权限验证)
-        
-        Returns:
-            是否删除成功
-        """
-        stmt = (
-            update(ChatSession)
-            .where(
-                ChatSession.id == session_id,
-                ChatSession.user_id == user_id
-            )
-            .values(is_deleted=True, updated_at=datetime.now())
-        )
-        result = await self.session.execute(stmt)
-        return result.rowcount > 0
-
-    async def hard_delete_session(self, session_id: int, user_id: int) -> bool:
-        """
-        硬删除会话及所有消息(谨慎使用)
+        硬删除会话及所有消息
         
         Args:
             session_id: 会话ID
@@ -225,8 +201,7 @@ class ChatMessageRepository:
         # 先验证会话归属
         session_stmt = select(ChatSession).where(
             ChatSession.id == session_id,
-            ChatSession.user_id == user_id,
-            ChatSession.is_deleted == False
+            ChatSession.user_id == user_id
         )
         session_result = await self.session.execute(session_stmt)
         if not session_result.scalars().first():
@@ -260,8 +235,7 @@ class ChatMessageRepository:
             .join(ChatSession, ChatMessage.session_id == ChatSession.id)
             .where(
                 ChatMessage.session_id == session_id,
-                ChatSession.user_id == user_id,
-                ChatSession.is_deleted == False
+                ChatSession.user_id == user_id
             )
             .order_by(ChatMessage.created_at.desc())
             .limit(n)

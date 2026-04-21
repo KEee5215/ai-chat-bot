@@ -1,7 +1,5 @@
 <template>
   <div class="flex flex-col gap-2 w-full max-w-2xl mx-auto px-4 py-4">
-    <input type="file" class="file-input file-input-ghost w-full" />
-
     <div class="flex gap-2 items-end">
       <textarea
         placeholder="type something ..."

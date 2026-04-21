@@ -262,6 +262,7 @@ async def get_user_sessions(
             {
                 "id": s.id,
                 "title": s.title,
+                "is_rag_session":s.is_rag_session,
                 "created_at": s.created_at.isoformat(),
                 "updated_at": s.updated_at.isoformat()
             }

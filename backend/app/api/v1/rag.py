@@ -105,7 +105,7 @@ async def upload_document(
 
     # 7. 如果提供了session_id，关联文档和会话
     if session_id:
-        from app.models.chat import session_documents
+        from app.models.chat import session_documents, ChatSession
         
         # 插入中间表记录
         insert_stmt = session_documents.insert().values(
@@ -113,6 +113,10 @@ async def upload_document(
             document_id=document.id
         )
         db.execute(insert_stmt)
+        
+        # 标记会话为 RAG 会话
+        session.is_rag_session = True
+        
         db.commit()
 
     return response.success_response(data={
@@ -266,4 +270,90 @@ async def get_session_documents(
         "session_id": session_id,
         "document_count": len(documents),
         "documents": documents
+    })
+
+
+@router.get("/sessions/{session_id}/history", response_model=ApiResponse)
+async def get_rag_history(
+        session_id: int,
+        page: int = 1,
+        page_size: int = 20,
+        current_user=Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """
+    获取会话的 RAG 对话历史
+    
+    Path Parameters:
+        session_id: 会话ID
+    
+    Query Parameters:
+        page: 页码（从1开始）
+        page_size: 每页数量
+    
+    Returns:
+        RAG 对话历史记录列表
+    """
+    import json
+    from sqlalchemy import select
+    from app.models.chat import ChatSession, RAGChatMessage
+    
+    # 1. 验证会话归属
+    stmt = select(ChatSession).where(
+        ChatSession.id == session_id,
+        ChatSession.user_id == current_user["user_id"]
+    )
+    result = db.execute(stmt)
+    session = result.scalars().first()
+
+    if not session:
+        return response.error_response({"message": "会话不存在或无访问权限"})
+
+    # 2. 分页查询 RAG 对话记录
+    offset = (page - 1) * page_size
+    stmt = (
+        select(RAGChatMessage)
+        .where(RAGChatMessage.session_id == session_id)
+        .order_by(RAGChatMessage.created_at.desc())
+        .offset(offset)
+        .limit(page_size)
+    )
+    result = db.execute(stmt)
+    rag_messages = result.scalars().all()
+
+    # 3. 格式化返回数据
+    history = []
+    for msg in rag_messages:
+        # 解析 JSON 字段
+        try:
+            document_ids = json.loads(msg.document_ids) if msg.document_ids else []
+            source_info = json.loads(msg.source_info) if msg.source_info else []
+        except json.JSONDecodeError:
+            document_ids = []
+            source_info = []
+        
+        history.append({
+            "id": msg.id,
+            "user_question": msg.user_question,
+            "ai_answer": msg.ai_answer,
+            "document_ids": document_ids,
+            "source_info": source_info,
+            "created_at": msg.created_at.isoformat() if msg.created_at else None
+        })
+
+    # 4. 获取总数
+    from sqlalchemy import func
+    count_stmt = (
+        select(func.count(RAGChatMessage.id))
+        .where(RAGChatMessage.session_id == session_id)
+    )
+    total = db.execute(count_stmt).scalar() or 0
+
+    return response.success_response(data={
+        "session_id": session_id,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size if page_size > 0 else 0,
+        "history": history
     })

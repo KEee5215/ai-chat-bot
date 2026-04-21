@@ -16,6 +16,11 @@ const router = createRouter({
           name: "chat",
           component: () => import("@/components/chat/ChatContainer.vue"),
         },
+        {
+          path: "/rag/:id",
+          name: "rag",
+          component: () => import("@/components/rag/RagChat.vue"),
+        },
       ],
     },
     {

@@ -77,7 +77,9 @@
               @click="selectSession(session)"
             >
               <!-- Settings icon -->
-              <BotIcon></BotIcon>
+
+              <RagIcon v-if="session.is_rag_session"></RagIcon>
+              <BotIcon v-else="session.is_rag_session"></BotIcon>
               <span class="is-drawer-close:hidden">{{ session.title }}</span>
             </button>
           </li>
@@ -184,6 +186,8 @@ import { useToast } from "vue-toast-notification";
 import "vue-toast-notification/dist/theme-sugar.css";
 import { addSession, getSession } from "@/api/chat/chat";
 import { useMessageStore } from "@/stores/message";
+import RagChat from "../rag/RagChat.vue";
+import RagIcon from "../icons/RagIcon.vue";
 
 const $toast = useToast();
 
@@ -199,6 +203,7 @@ const sessionId = ref(messageStore.sessionId);
 interface Session {
   id: string;
   title: string;
+  is_rag_session: number;
   createTime: string;
 }
 
@@ -209,7 +214,13 @@ const selectSession = (session: Session) => {
   sessionId.value = session.id;
   messageStore.setSessionId(session.id);
   // 跳转到对应会话页面，路由变化会触发 ChatContainer 的 watch 重新加载消息
-  router.push(`/chat/${session.id}`);
+  if (session.is_rag_session) {
+    //跳转rag对话
+    router.push(`/rag/${session.id}`);
+  } else {
+    //跳转普通对话
+    router.push(`/chat/${session.id}`);
+  }
 };
 
 // 显示新建会话弹窗
