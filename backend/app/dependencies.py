@@ -1,5 +1,5 @@
 from app.core.mail import create_mail_instance
-from models import AsyncSessionMaker, SyncSessionMaker
+from app.models import AsyncSessionMaker, SyncSessionMaker
 from fastapi_mail import FastMail
 from sqlalchemy.orm import Session
 from typing import Generator

@@ -20,6 +20,7 @@ class ChatSession(Base):
     # 关系
     user: Mapped["User"] = relationship(back_populates="chat_sessions")
     messages: Mapped[List["ChatMessage"]] = relationship(back_populates="session", cascade="all, delete-orphan")
+    rag_messages: Mapped[List["RAGChatMessage"]] = relationship(back_populates="session", cascade="all, delete-orphan")
     documents: Mapped[List["Document"]] = relationship(
         back_populates="sessions",
         secondary="session_documents"
@@ -78,3 +79,22 @@ session_documents = Table(
     Column("session_id", Integer, ForeignKey("chat_session.id"), primary_key=True),
     Column("document_id", Integer, ForeignKey("documents.id"), primary_key=True)
 )
+
+
+class RAGChatMessage(Base):
+    """RAG 对话记录表 - 专门存储 RAG 问答历史"""
+    __tablename__ = "rag_chat_message"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("chat_session.id"), nullable=False, index=True)
+    user_question: Mapped[str] = mapped_column(Text, nullable=False, comment="用户问题")
+    ai_answer: Mapped[str] = mapped_column(Text, nullable=False, comment="AI回答")
+    document_ids: Mapped[str] = mapped_column(String(500), nullable=True, comment="检索的文档ID列表，JSON格式")
+    source_info: Mapped[str] = mapped_column(Text, nullable=True, comment="来源文档信息，JSON格式")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, comment="创建时间")
+
+    # 关系
+    session: Mapped["ChatSession"] = relationship(back_populates="rag_messages")
+
+    def __repr__(self):
+        return f"<RAGChatMessage(id={self.id}, session_id={self.session_id})>"

@@ -13,7 +13,7 @@ from fastapi_mail import FastMail, MessageSchema, MessageType
 from app.dependencies import get_mail
 from app.exceptions import BusinessException
 from app.utils.response import error_response
-from models import AsyncSessionMaker,engine
+from app.models import AsyncSessionMaker,engine
 
 from app.api.v1 import auth, user, item, chat, rag
 
