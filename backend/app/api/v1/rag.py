@@ -165,7 +165,7 @@ async def rag_query(
 
     # 3. 执行RAG查询
     rag_service = RAGService()
-    result = await rag_service.query_rag(
+    result_data = await rag_service.query_rag(
         session_id=session_id,
         user_id=current_user["user_id"],
         document_ids=request.document_ids,
@@ -184,13 +184,13 @@ async def rag_query(
             "filename": doc.metadata.get("original_filename"),
             "preview": doc.page_content[:200]
         }
-        for doc in result.get("source_documents", [])
+        for doc in result_data.get("source_documents", [])
     ]
     
     rag_message = RAGChatMessage(
         session_id=session_id,
         user_question=request.question,
-        ai_answer=result["answer"],
+        ai_answer=result_data["answer"],
         document_ids=json.dumps(request.document_ids),
         source_info=json.dumps(source_info, ensure_ascii=False)
     )
@@ -198,7 +198,7 @@ async def rag_query(
     db.commit()
 
     return response.success_response(data={
-        "answer": result["answer"],
+        "answer": result_data["answer"],
         "sources": [
             {
                 "document_id": doc.metadata.get("document_id"),
@@ -206,6 +206,64 @@ async def rag_query(
                 "preview": doc.page_content[:200],
                 "score": None  # ChromaDB 默认不返回分数
             }
-            for doc in result.get("source_documents", [])
+            for doc in result_data.get("source_documents", [])
         ]
+    })
+
+
+@router.get("/sessions/{session_id}/documents", response_model=ApiResponse)
+async def get_session_documents(
+        session_id: int,
+        current_user=Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """
+    获取会话关联的所有文档
+    
+    Path Parameters:
+        session_id: 会话ID
+    
+    Returns:
+        文档列表，包含文档ID、文件名、文件大小等信息
+    """
+    # 1. 验证会话归属
+    from sqlalchemy import select
+    from app.models.chat import ChatSession, session_documents
+    
+    stmt = select(ChatSession).where(
+        ChatSession.id == session_id,
+        ChatSession.user_id == current_user["user_id"]
+    )
+    result = db.execute(stmt)
+    session = result.scalars().first()
+
+    if not session:
+        return response.error_response({"message": "会话不存在或无访问权限"})
+
+    # 2. 查询会话关联的所有文档
+    stmt = (
+        select(session_documents.c.document_id)
+        .where(session_documents.c.session_id == session_id)
+    )
+    result = db.execute(stmt)
+    document_ids = [row[0] for row in result]
+
+    # 3. 获取文档详细信息
+    doc_repo = DocumentRepository(db)
+    documents = []
+    for doc_id in document_ids:
+        doc = doc_repo.get_by_id(doc_id)
+        if doc:
+            documents.append({
+                "id": doc.id,
+                "original_name": doc.original_name,
+                "file_size": doc.file_size,
+                "file_extension": doc.file_extension,
+                "uploaded_at": doc.uploaded_at.isoformat() if doc.uploaded_at else None
+            })
+
+    return response.success_response(data={
+        "session_id": session_id,
+        "document_count": len(documents),
+        "documents": documents
     })
