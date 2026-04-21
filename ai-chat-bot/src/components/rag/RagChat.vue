@@ -39,7 +39,10 @@ const messageStore = useMessageStore();
 function convertHistoryToMessages(history: any[]) {
   const messages: Message[] = [];
   
-  history.forEach((item) => {
+  // 反转数组，使最旧的消息在前，最新的消息在后
+  const reversedHistory = [...history].reverse();
+  
+  reversedHistory.forEach((item) => {
     // 添加用户消息
     messages.push({
       id: `user-${item.id}`,
