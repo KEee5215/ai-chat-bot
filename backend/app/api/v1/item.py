@@ -14,3 +14,12 @@ async def get_item_page(page_params: Annotated[dict,Depends(page_common)]):
     page = page_params.get("page")
     size = page_params.get("pageSize")
     return success_response(data={"页码": page, "每页尺寸": size})
+
+
+
+@router.get("/getAll")
+async def get_item_all():
+    """查询所有物品"""
+    # 模拟返回一个一万条数据的数组
+    data = [{"id": i, "name": f"物品{i}"} for i in range(10000)]
+    return success_response(data=data)
